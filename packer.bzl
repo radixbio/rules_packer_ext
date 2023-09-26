@@ -90,6 +90,7 @@ def _packer_qemu_impl(ctx):
     run = ctx.actions.declare_file("run-" + ctx.attr.name)
 
     pyscript_content = """
+      "architecture": "{architecture}",
       "overwrite": {overwrite},
       "packerfile": "{packerfile}",
       "out_dir": "{out_dir}",
@@ -99,6 +100,7 @@ def _packer_qemu_impl(ctx):
       "sha256_var_name": "{sha256_var_name}",
       "iso_img_loc": "{iso_img_loc}"
     """.format(
+        architecture = str(ctx.attr.architecture),
         overwrite = str(ctx.attr.overwrite).lower(),
         packerfile = packerfile.path,
         out_dir = out.path,
@@ -142,6 +144,9 @@ packer_qemu = rule(
     implementation = _packer_qemu_impl,
     toolchains = ["@bazel_tools//tools/python:toolchain_type"],
     attrs = {
+        "architecture": attr.string(
+            default = "x86_64",
+        ),
         "overwrite": attr.bool(
             default = False,
         ),
