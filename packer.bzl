@@ -1,4 +1,4 @@
-load("@com_github_rules_packer_config//:config.bzl", "PACKER_VERSION", "PACKER_SHAS", "PACKER_OS", "PACKER_ARCH", "PACKER_BIN_NAME", "PACKER_GLOBAL_SUBS", "PACKER_DEBUG")
+load("@com_github_rules_packer_config//:config.bzl", "PACKER_ARCH", "PACKER_BIN_NAME", "PACKER_DEBUG", "PACKER_GLOBAL_SUBS", "PACKER_OS", "PACKER_SHAS", "PACKER_VERSION")
 load("@aspect_bazel_lib//lib:expand_make_vars.bzl", "expand_locations")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
@@ -32,6 +32,8 @@ def _subst(ctx, in_dict, deps, input_img, input_img_key, add_subst = False):
     return out_dict
 
 def _packer_qemu_impl(ctx):
+    py = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"].py3_runtime.interpreter
+
     # Declare our output directory (this may not be a thing for all builders, but it is for QEMU)
     out = ctx.actions.declare_directory(ctx.attr.name)
     if len(ctx.attr.input_img.files.to_list()) != 1:
@@ -70,7 +72,7 @@ def _packer_qemu_impl(ctx):
         ctx.actions.expand_template(
             template = ctx.file.var_file,
             output = var_file,
-            substitutions = substitutions
+            substitutions = substitutions,
         )
 
     # pack the vars command line arguments, substituting $(location) and {input_img}
@@ -81,7 +83,7 @@ def _packer_qemu_impl(ctx):
     ctx.actions.expand_template(
         template = ctx.file.packerfile,
         output = packerfile,
-        substitutions = substitutions
+        substitutions = substitutions,
     )
 
     # NOTE this is done due to weird bazel args quoting when the input has an = or > in it
@@ -104,9 +106,9 @@ def _packer_qemu_impl(ctx):
         var_file = var_file.path if var_file else "null",
         packer_path = ctx.file._packer.path,
         sha256_var_name = ctx.attr.sha256_var_name if ctx.attr.sha256_var_name else "null",
-        iso_img_loc = path
+        iso_img_loc = path,
     )
-    pyscript_content = '{' + pyscript_content + '}'
+    pyscript_content = "{" + pyscript_content + "}"
     pyscript_input = ctx.actions.declare_file("run-" + ctx.attr.name + ".input.json")
 
     ctx.actions.write(
@@ -114,38 +116,38 @@ def _packer_qemu_impl(ctx):
         content = pyscript_content,
     )
 
-    script = "python " + ctx.executable._deployment_script.path + " " + pyscript_input.path + "\n"
+    script = py.path + " " + ctx.executable._deployment_script.path + " " + pyscript_input.path + "\n"
 
     # pump the command into a file
     ctx.actions.write(
         output = run,
         content = script,
-        is_executable = True
+        is_executable = True,
     )
 
     # and execute it
     ctx.actions.run(
         executable = run,
         env = env,
-        inputs = [x for x in [packerfile, var_file] if x != None] + ctx.files.deps + [pyscript_input] + ctx.attr.input_img.files.to_list(), # Look, i know it's stupid
+        inputs = [x for x in [packerfile, var_file] if x != None] + ctx.files.deps + [pyscript_input] + ctx.attr.input_img.files.to_list(),  # Look, i know it's stupid
         outputs = [out],
         use_default_shell_env = False,
         mnemonic = "Packer",
-        tools = [ctx.file._packer, ctx.executable._deployment_script]
+        tools = [ctx.file._packer, ctx.executable._deployment_script, py],
     )
 
-    return [DefaultInfo(files=depset([out]))]
+    return [DefaultInfo(files = depset([out]))]
 
 packer_qemu = rule(
     implementation = _packer_qemu_impl,
-#    toolchains = ["//packer:toolchain_type"],
+    toolchains = ["@bazel_tools//tools/python:toolchain_type"],
     attrs = {
         "overwrite": attr.bool(
-            default = False
+            default = False,
         ),
         "packerfile": attr.label(
             allow_single_file = True,
-            mandatory = True
+            mandatory = True,
         ),
         "var_file": attr.label(
             allow_single_file = True,
@@ -158,29 +160,29 @@ packer_qemu = rule(
             default = "file://{{ env `PWD` }}/{input_img}",
         ),
         "input_img_subs_key": attr.string(
-            default = "{iso}"
+            default = "{iso}",
         ),
         "sha256_var_name": attr.string(
-            default = "iso_checksum"
+            default = "iso_checksum",
         ),
-        "substitutions": attr.string_dict(), # NOTE: Substitutes in the templates
-        "vars": attr.string_dict(), # NOTE: passed as CLI args
-        "env": attr.string_dict(), # NOTE: passed to the packer command
+        "substitutions": attr.string_dict(),  # NOTE: Substitutes in the templates
+        "vars": attr.string_dict(),  # NOTE: passed as CLI args
+        "env": attr.string_dict(),  # NOTE: passed to the packer command
         "deps": attr.label_list(
-            allow_files = True
+            allow_files = True,
         ),
         "_deployment_script": attr.label(
             allow_single_file = True,
-            default = "//:packer2.py", # NOTE: this script is used to handle the "overwrite" flag properly
+            default = "//:packer2.py",  # NOTE: this script is used to handle the "overwrite" flag properly
             executable = True,
-            cfg = "exec"
+            cfg = "exec",
         ),
         "debug": attr.bool(
-            default = PACKER_DEBUG
+            default = PACKER_DEBUG,
         ),
         "_packer": attr.label(
             allow_single_file = True,
-            default = "@packer//:" + PACKER_BIN_NAME # TODO: Toolchain here?
-        )
-    }
+            default = "@packer//:" + PACKER_BIN_NAME,  # TODO: Toolchain here?
+        ),
+    },
 )

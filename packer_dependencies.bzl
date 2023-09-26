@@ -1,12 +1,14 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("@com_github_rules_packer_config//:config.bzl",
-     "PACKER_VERSION",
-     "PACKER_SHAS",
-     "PACKER_OS",
-     "PACKER_ARCH",
-     "PACKER_BIN_NAME",
-     "PACKER_QEMU_VERSION")
+load(
+    "@com_github_rules_packer_config//:config.bzl",
+    "PACKER_ARCH",
+    "PACKER_BIN_NAME",
+    "PACKER_OS",
+    "PACKER_QEMU_VERSION",
+    "PACKER_SHAS",
+    "PACKER_VERSION",
+)
 
 def packer_dependencies():
     packer_exports = 'exports_files(["' + PACKER_BIN_NAME + '"])'
@@ -17,8 +19,8 @@ def packer_dependencies():
         name = "packer",
         url = packer_url,
         sha256 = packer_sha,
-        build_file_content = packer_exports
-     )
+        build_file_content = packer_exports,
+    )
 
     maybe(
         http_archive,

@@ -1,18 +1,17 @@
 _LUT = {
-    "macosx" : "darwin",
+    "macosx": "darwin",
     "aarch64": "arm64",
     "linux": "linux",
     "windows": "windows",
     "amd64": "amd64",
-    "i386": "386",       # Untested
+    "i386": "386",  # Untested
     "arm": "arm",
-    "ppc64": "ppc64le",   # Untested
-    "freebsd": "freebsd", # Untested
-    "netbsd": "netbsd",   # Untested
-    "openbsd": "openbsd", # Untested
-    "solaris": "solaris"
+    "ppc64": "ppc64le",  # Untested
+    "freebsd": "freebsd",  # Untested
+    "netbsd": "netbsd",  # Untested
+    "openbsd": "openbsd",  # Untested
+    "solaris": "solaris",
 }
-
 
 _PKR_URL = "https://releases.hashicorp.com/packer/{version}/packer_{version}_{os}_{arch}.zip"
 
@@ -26,12 +25,12 @@ def _packer_configure_impl(repository_ctx):
     packer_version = repository_ctx.attr.packer_version
     repository_ctx.download(
         url = "https://releases.hashicorp.com/packer/{version}/packer_{version}_SHA256SUMS".format(version = packer_version),
-        output = "packer_{version}_shas.txt".format(version = packer_version)
+        output = "packer_{version}_shas.txt".format(version = packer_version),
     )
     shas = repository_ctx.read(
-        "packer_{version}_shas.txt".format(version = packer_version)
+        "packer_{version}_shas.txt".format(version = packer_version),
     )
-    shas = {x[66 + len("packer_{version}_".format(version = packer_version)):-4]:x[:64] for x in shas.split("\n")}
+    shas = {x[66 + len("packer_{version}_".format(version = packer_version)):-4]: x[:64] for x in shas.split("\n")}
     shas = [{k.split("_")[0]: {k.split("_")[1]: v}} for k, v in shas.items() if k.find("_") != -1]
     os_arch_sha = {}
     for d in shas:
@@ -40,7 +39,7 @@ def _packer_configure_impl(repository_ctx):
         url = _PKR_URL.format(
             version = packer_version,
             os = os,
-            arch = arch
+            arch = arch,
         )
         existing_inner = os_arch_sha.get(_hashicorp_to_java_prop(os), {_hashicorp_to_java_prop(arch): (url, sha)})
         existing_inner.update([(_hashicorp_to_java_prop(arch), (url, sha))])
@@ -69,7 +68,7 @@ def _packer_configure_impl(repository_ctx):
         packer_bin_name = packer_bin_name,
         global_substitutions = repository_ctx.attr.global_substitutions,
         debug = repository_ctx.attr.debug,
-        qemu_version = repository_ctx.attr.qemu_version
+        qemu_version = repository_ctx.attr.qemu_version,
     ).replace(" ", "")
 
     repository_ctx.file("config.bzl", config_file_content)
@@ -79,22 +78,23 @@ _packer_configure = repository_rule(
     implementation = _packer_configure_impl,
     attrs = {
         "packer_version": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "qemu_version": attr.string(
-            default = "7.2.0"
+            default = "7.2.0",
         ),
         "global_substitutions": attr.string_dict(),
         "debug": attr.bool(
-            default = False
-        )
-    }
+            default = False,
+        ),
+    },
 )
+
 def packer_configure(packer_version, qemu_version, global_substitutions, debug):
     _packer_configure(
         name = "com_github_rules_packer_config",
         packer_version = packer_version,
         qemu_version = qemu_version,
         global_substitutions = global_substitutions,
-        debug = debug
+        debug = debug,
     )
