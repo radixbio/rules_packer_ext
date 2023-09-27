@@ -124,7 +124,6 @@ if __name__ == "__main__":
     parser.add_argument("config")
     args = parser.parse_args()
     config = parse_input_json(args.config)
-    print(config)
     qemu_name = "x86_64"# find_system_qemu(platform.processor()) # this is probably wrong, since we're specifying arch
     qemu_path = os.path.dirname(qemu_name)
     deal_with_existing_out_dir(config.out_dir)
