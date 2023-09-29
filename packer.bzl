@@ -33,6 +33,7 @@ def _subst(ctx, in_dict, deps, input_img, input_img_key, add_subst = False):
 
 def _packer_qemu_impl(ctx):
     py = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"].py3_runtime.interpreter
+
     # Declare our output directory (this may not be a thing for all builders, but it is for QEMU)
     out = ctx.actions.declare_directory(ctx.attr.name)
     if len(ctx.attr.input_img.files.to_list()) != 1:
@@ -180,7 +181,7 @@ packer_qemu = rule(
             default = "@packer//:" + PACKER_BIN_NAME,  # TODO: Toolchain here?
         ),
         "_py": attr.label(
-            default = "@rules_python//python:current_py_toolchain"
-        )
+            default = "@rules_python//python:current_py_toolchain",
+        ),
     },
 )
