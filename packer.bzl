@@ -33,7 +33,6 @@ def _subst(ctx, in_dict, deps, input_img, input_img_key, add_subst = False):
 
 def _packer_qemu_impl(ctx):
     py = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"].py3_runtime.interpreter
-
     # Declare our output directory (this may not be a thing for all builders, but it is for QEMU)
     out = ctx.actions.declare_directory(ctx.attr.name)
     if len(ctx.attr.input_img.files.to_list()) != 1:
@@ -86,9 +85,6 @@ def _packer_qemu_impl(ctx):
         substitutions = substitutions,
     )
 
-    # NOTE this is done due to weird bazel args quoting when the input has an = or > in it
-    run = ctx.actions.declare_file("run-" + ctx.attr.name)
-
     pyscript_content = """
       "architecture": "{architecture}",
       "overwrite": {overwrite},
@@ -118,24 +114,18 @@ def _packer_qemu_impl(ctx):
         content = pyscript_content,
     )
 
-    script = py.path + " " + ctx.executable._deployment_script.path + " " + pyscript_input.path + "\n"
-
-    # pump the command into a file
-    ctx.actions.write(
-        output = run,
-        content = script,
-        is_executable = True,
-    )
+    env.update({"HOME": "."})
 
     # and execute it
     ctx.actions.run(
-        executable = run,
+        executable = py.path,
+        arguments = [ctx.executable._deployment_script.path, pyscript_input.path],
         env = env,
         inputs = [x for x in [packerfile, var_file] if x != None] + ctx.files.deps + [pyscript_input] + ctx.attr.input_img.files.to_list(),  # Look, i know it's stupid
         outputs = [out],
         use_default_shell_env = False,
         mnemonic = "Packer",
-        tools = [ctx.file._packer, ctx.executable._deployment_script, py],
+        tools = [ctx.file._packer, ctx.executable._deployment_script, py] + ctx.attr._py.files.to_list(),
     )
 
     return [DefaultInfo(files = depset([out]))]
@@ -189,5 +179,8 @@ packer_qemu = rule(
             allow_single_file = True,
             default = "@packer//:" + PACKER_BIN_NAME,  # TODO: Toolchain here?
         ),
+        "_py": attr.label(
+            default = "@rules_python//python:current_py_toolchain"
+        )
     },
 )

@@ -85,7 +85,6 @@ def deal_with_existing_out_dir(path):
                 raise NotImplementedError("not implemented for non-overwrite")
                 pass # some clever sha thing? or just never run packer
 
-# i'm pretty sure this is the wrong way to do this
 def find_system_qemu(tgt_arch):
     # simple case, qemu_system_{tgt-arch} exists on $PATH
     qemu_search = "qemu-system-" + tgt_arch
@@ -124,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument("config")
     args = parser.parse_args()
     config = parse_input_json(args.config)
-    qemu_name = "x86_64"# find_system_qemu(platform.processor()) # this is probably wrong, since we're specifying arch
+    qemu_name = find_system_qemu(config.architecture)
     qemu_path = os.path.dirname(qemu_name)
     deal_with_existing_out_dir(config.out_dir)
     packer = invoke_packer(config, qemu_path)
