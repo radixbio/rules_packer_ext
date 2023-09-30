@@ -1,1 +1,0 @@
-def _qemu_img_convert
