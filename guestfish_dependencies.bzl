@@ -1,7 +1,6 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
-
 def guestfish_dependencies():
     maybe(
         http_archive,
@@ -36,5 +35,5 @@ def guestfish_dependencies():
                 "usr/lib/libguestfs_jni.so.1",
                 "usr/lib/libguestfs_jni.so.1.50.1",
         ])
-        """
+        """,
     )
