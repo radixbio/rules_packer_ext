@@ -169,7 +169,7 @@ packer_qemu = rule(
         ),
         "_deployment_script": attr.label(
             allow_single_file = True,
-            default = "//:packer2.py",  # NOTE: this script is used to handle the "overwrite" flag properly
+            default = "//:packer.py",  # NOTE: this script is used to handle the "overwrite" flag properly
             executable = True,
             cfg = "exec",
         ),

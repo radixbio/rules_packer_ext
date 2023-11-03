@@ -29,10 +29,3 @@ def packer_dependencies():
         strip_prefix = "bazel-lib-1.28.0",
         url = "https://github.com/aspect-build/bazel-lib/releases/download/v1.28.0/bazel-lib-v1.28.0.tar.gz",
     )
-
-    #maybe(
-    #    http_archive,
-    #    name = "qemu_linux_x64",
-    #    strip_prefix = "qemu-".format(PACKER_QEMU_VERSION),
-    #    url = "https://download.qemu.org/qemu-{}.tar.xz".format(PACKER_QEMU_VERSION)
-    #)

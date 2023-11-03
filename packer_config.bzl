@@ -21,6 +21,15 @@ def _java_prop_to_hashicorp(str):
 def _hashicorp_to_java_prop(str):
     return {v: k for k, v in _LUT.items()}[str]
 
+def _subst(repository_ctx):
+    build_on_os = repository_ctx.os.name.lower()
+    if build_on_os == "linux":
+        return repository_ctx.attr.linux_substitutions
+    elif build_on_os == "macos" or build_on_os == "darwin" or build_on_os == "mac os x":
+        return repository_ctx.attr.macos_substitutions
+    else:
+        fail("cannot find substitutions for platform " + build_on_os)
+
 def _packer_configure_impl(repository_ctx):
     packer_version = repository_ctx.attr.packer_version
     repository_ctx.download(
@@ -66,7 +75,7 @@ def _packer_configure_impl(repository_ctx):
         os = repository_ctx.os.name,
         arch = repository_ctx.os.arch,
         packer_bin_name = packer_bin_name,
-        global_substitutions = repository_ctx.attr.global_substitutions,
+        global_substitutions = _subst(repository_ctx),
         debug = repository_ctx.attr.debug,
         qemu_version = repository_ctx.attr.qemu_version,
     ).replace(" ", "")
@@ -83,18 +92,20 @@ _packer_configure = repository_rule(
         "qemu_version": attr.string(
             default = "7.2.0",
         ),
-        "global_substitutions": attr.string_dict(),
+        "linux_substitutions": attr.string_dict(),
+        "macos_substitutions": attr.string_dict(),
         "debug": attr.bool(
             default = False,
         ),
     },
 )
 
-def packer_configure(packer_version, qemu_version, global_substitutions, debug):
+def packer_configure(packer_version, qemu_version, linux_substitutions, macos_substitutions, debug):
     _packer_configure(
         name = "com_github_rules_packer_config",
         packer_version = packer_version,
         qemu_version = qemu_version,
-        global_substitutions = global_substitutions,
+        linux_substitutions = linux_substitutions,
+        macos_substitutions = macos_substitutions,
         debug = debug,
     )
