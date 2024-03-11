@@ -15,6 +15,12 @@ _LUT = {
 
 _PKR_URL = "https://releases.hashicorp.com/packer/{version}/packer_{version}_{os}_{arch}.zip"
 
+def _normalize_intel(str):
+    if str == "x86_64":
+        return "amd64"
+    else:
+        return str
+
 def _java_prop_to_hashicorp(str):
     return _LUT[str]
 
@@ -73,7 +79,7 @@ def _packer_configure_impl(repository_ctx):
         packer_version = packer_version,
         packer_shas = str(os_arch_sha),
         os = repository_ctx.os.name,
-        arch = repository_ctx.os.arch,
+        arch = _normalize_intel(repository_ctx.os.arch),
         packer_bin_name = packer_bin_name,
         global_substitutions = _subst(repository_ctx),
         debug = repository_ctx.attr.debug,
