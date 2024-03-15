@@ -1,0 +1,36 @@
+{
+  "builders": [
+    {
+      "type": "qemu",
+      "iso_url": "{{ user `iso_url` }}",
+      "iso_checksum": "sha256:{{ user `iso_checksum` }}",
+      "output_directory": "{{ user `output` }}",
+      "ssh_password": "{{ user `ssh_password` }}",
+      "ssh_timeout": "10000s",
+      "ssh_username": "{{ user `ssh_username` }}",
+      "vm_name": "{{ user `vm_name` }}",
+      "disk_image": "true",
+      "skip_resize_disk": "true",
+      "qemuargs": [
+        ["-m", "{{ user `memory` }}"],
+        ["-machine", "accel={{ user `accel` }}"],
+        ["-cpu", "{{ user `cpu` }}"]
+      ]
+    }
+  ],
+  "provisioners": [
+
+  ],
+  "variables": {
+    "iso_url": "{iso}",
+    "iso_checksum": "{iso_checksum}",
+    "output": "{output}",
+    "ssh_fullname": "{ssh_fullname}",
+    "ssh_password": "{ssh_password}",
+    "ssh_username": "{ssh_username}",
+    "vm_name": "{name}",
+    "accel": "{accel}",
+    "memory": "{memory}",
+    "cpu": "{cpu}"
+  }
+}

@@ -3,4 +3,5 @@ exports_files([
     "packer_config.bzl",
     "packer_dependencies.bzl",
     "packer.py",
+    "provision.json",
 ])

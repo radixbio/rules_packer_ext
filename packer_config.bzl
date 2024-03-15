@@ -66,6 +66,10 @@ def _packer_configure_impl(repository_ctx):
     else:
         packer_bin_name = "packer"
 
+    packer_display = ""
+    if "DISPLAY" in repository_ctx.os.environ:
+        packer_display = repository_ctx.os.environ["DISPLAY"]
+
     config_file_content = """
     PACKER_VERSION="{packer_version}"
     PACKER_OS="{os}"
@@ -75,6 +79,7 @@ def _packer_configure_impl(repository_ctx):
     PACKER_GLOBAL_SUBS={global_substitutions}
     PACKER_DEBUG={debug}
     PACKER_QEMU_VERSION="{qemu_version}"
+    PACKER_DISPLAY="{packer_display}"
     """.format(
         packer_version = packer_version,
         packer_shas = str(os_arch_sha),
@@ -84,6 +89,7 @@ def _packer_configure_impl(repository_ctx):
         global_substitutions = _subst(repository_ctx),
         debug = repository_ctx.attr.debug,
         qemu_version = repository_ctx.attr.qemu_version,
+        packer_display = packer_display,
     ).replace(" ", "")
 
     repository_ctx.file("config.bzl", config_file_content)
@@ -104,6 +110,9 @@ _packer_configure = repository_rule(
             default = False,
         ),
     },
+    environ = [
+        "DISPLAY",
+    ],
 )
 
 def packer_configure(packer_version, qemu_version, linux_substitutions, macos_substitutions, debug):
