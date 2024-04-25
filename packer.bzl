@@ -2,7 +2,7 @@ load("@com_github_rules_packer_config//:config.bzl", "PACKER_ARCH", "PACKER_BIN_
 load("@aspect_bazel_lib//lib:expand_make_vars.bzl", "expand_locations")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
-def _img_path_subst(fmtstring, replace, replace_val):
+def img_path_subst(fmtstring, replace, replace_val):
     # do template substitution on a string
     # if the string-to-replace exists in the fmtstring...
     if fmtstring.find(replace) != -1:
@@ -54,7 +54,7 @@ def _subst(ctx, input_substitutions, add_subst = False):
     # the default here is "file://{{ env `PWD` }}/{input_img}"
     # so we'd like to turn that into something like file:///monorepo/bazel-out/crap/external/ubuntu/ubuntu.iso
     # so it can be substituted later
-    img_path = _img_path_subst(ctx.attr.input_img_fmtstring, "{input_img}", path)
+    img_path = img_path_subst(ctx.attr.input_img_fmtstring, "{input_img}", path)
 
     # if any of the values in the declared substitutions have a location directive, we'd like to expand that
     for k, v in cp.items():
@@ -63,7 +63,7 @@ def _subst(ctx, input_substitutions, add_subst = False):
         # the value substitution can also contain a {input_img} substring
         # to be noted, this is *different* from the substitution that may be used in the var file
         # NOTE: i'm not sure this second layer of substitution is required
-        v_subs = _img_path_subst(
+        v_subs = img_path_subst(
             expand_locations(
                 ctx,
                 v,
