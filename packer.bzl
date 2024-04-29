@@ -1,6 +1,6 @@
-load("@com_github_rules_packer_config//:config.bzl", "PACKER_ARCH", "PACKER_BIN_NAME", "PACKER_DEBUG", "PACKER_DISPLAY", "PACKER_GLOBAL_SUBS", "PACKER_OS", "PACKER_SHAS", "PACKER_VERSION")
 load("@aspect_bazel_lib//lib:expand_make_vars.bzl", "expand_locations")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load("@com_github_rules_packer_config//:config.bzl", "PACKER_ARCH", "PACKER_BIN_NAME", "PACKER_DEBUG", "PACKER_DISPLAY", "PACKER_GLOBAL_SUBS", "PACKER_OS", "PACKER_SHAS", "PACKER_VERSION")
 
 def img_path_subst(fmtstring, replace, replace_val):
     # do template substitution on a string
