@@ -2,24 +2,6 @@ load("@aspect_bazel_lib//lib:expand_make_vars.bzl", "expand_locations")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@com_github_rules_packer_config//:config.bzl", "PACKER_ARCH", "PACKER_BIN_NAME", "PACKER_DEBUG", "PACKER_DISPLAY", "PACKER_GLOBAL_SUBS", "PACKER_OS", "PACKER_SHAS", "PACKER_VERSION")
 
-def img_path_subst(fmtstring, replace, replace_val):
-    # do template substitution on a string
-    # if the string-to-replace exists in the fmtstring...
-    if fmtstring.find(replace) != -1:
-        # grab the indicies of the format string
-        fst = fmtstring[:fmtstring.find(replace)]
-        snd = fmtstring[fmtstring.find(replace) + len(replace):]
-
-        # and replace it
-        return fst + replace_val + snd
-    else:
-        # if it does not exist, do not substitute anything
-        return fmtstring
-
-def _copy_dict(d):
-    # we're going to mutate this dictionary, so i'd like to do a deepcopy
-    return {k: v for k, v in d.items()}
-
 def _get_iso_loc_from_tgt(tgt):
     # this is passed a bazel target for input_img
     # so let's get the actual file reference to the input_img
@@ -42,10 +24,6 @@ def _get_iso_loc_from_tgt(tgt):
 def _subst(ctx, input_substitutions, add_subst = False):
     # this method deals with a substitutions dict that will eventually be passed into
     # ctx.actions.expand_template
-    #
-    # pull a copy of the substitutions
-    cp = _copy_dict(input_substitutions)
-    out_dict = []
 
     # get the relative path to the input disk image (or iso)
     path = _get_iso_loc_from_tgt(ctx.attr.input_img)
@@ -54,28 +32,26 @@ def _subst(ctx, input_substitutions, add_subst = False):
     # the default here is "file://{{ env `PWD` }}/{input_img}"
     # so we'd like to turn that into something like file:///monorepo/bazel-out/crap/external/ubuntu/ubuntu.iso
     # so it can be substituted later
-    img_path = img_path_subst(ctx.attr.input_img_fmtstring, "{input_img}", path)
+    img_path = ctx.attr.input_img_fmtstring.replace("{input_img}", path)
 
     # if any of the values in the declared substitutions have a location directive, we'd like to expand that
-    for k, v in cp.items():
-        # given the location of anything in deps, or the input_img, those are valid things to expand the $(location)
-        # syntax on
-        # the value substitution can also contain a {input_img} substring
-        # to be noted, this is *different* from the substitution that may be used in the var file
-        # NOTE: i'm not sure this second layer of substitution is required
-        v_subs = img_path_subst(
-            expand_locations(
-                ctx,
-                v,
-                ctx.attr.deps + [ctx.attr.input_img],
-            ),
-            ctx.attr.input_img_subs_key,
-            img_path,
+    # given the location of anything in deps, or the input_img, those are valid things to expand the $(location)
+    # syntax on
+    # the value substitution can also contain a {input_img} substring
+    # to be noted, this is *different* from the substitution that may be used in the var file
+    # NOTE: i'm not sure this second layer of substitution is required
+    out_dict = {
+        k: expand_locations(
+            ctx,
+            v,
+            ctx.attr.deps + [ctx.attr.input_img],
         )
-        out_dict.append((k, v_subs))
-    out_dict = dict(out_dict)
+            .replace(ctx.attr.input_img_subs_key, img_path)
+        for k, v in input_substitutions.items()
+    }
+
     if add_subst:
-        out_dict.update({ctx.attr.input_img_subs_key: img_path})
+        out_dict[ctx.attr.input_img_subs_key] = img_path
     return out_dict
 
 def _write_var_file(ctx, varfile, substitutions, suffix = "_"):
@@ -90,7 +66,7 @@ def _write_var_file(ctx, varfile, substitutions, suffix = "_"):
     return var_file
 
 def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
-    pyscript_content = """
+    pyscript_content = """{{
       "name": "{name}",
       "architecture": "{architecture}",
       "overwrite": {overwrite},
@@ -102,7 +78,7 @@ def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
       "sha256_var_name": "{sha256_var_name}",
       "iso_img_loc": "{iso_img_loc}",
       "env": {env}
-    """.format(
+    }}""".format(
         name = str(ctx.attr.name),
         architecture = str(ctx.attr.architecture),
         overwrite = str(ctx.attr.overwrite).lower(),  # json boolean
@@ -115,7 +91,6 @@ def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
         iso_img_loc = path,
         env = str(env),
     )
-    pyscript_content = "{" + pyscript_content + "}"
     pyscript_input = ctx.actions.declare_file("run-" + ctx.attr.name + ".input.json")
 
     ctx.actions.write(
@@ -133,6 +108,8 @@ def _write_pkr_file(ctx, template, substitutions):
     )
     return packerfile
 
+PackerCommonInfo = provider(fields = ["substitutions", "env_items"])
+
 def _common_init(ctx, pkrfile, varfile, vars):
     # Declare our output directory (this may not be a thing for all builders, but it is for QEMU)
     out = ctx.actions.declare_directory(ctx.attr.name)
@@ -148,7 +125,7 @@ def _common_init(ctx, pkrfile, varfile, vars):
     #     "{iso}": "{input_img}"
     # }
     # declare our substitutions, merge with the global map, and splice in output / $(locations)
-    subst_items = _copy_dict(ctx.attr.substitutions) if ctx.attr.substitutions else {}
+    subst_items = dict(ctx.attr.substitutions) if ctx.attr.substitutions else {}
     subst_items.update(PACKER_GLOBAL_SUBS)
     if subst_items.get("{output}") == "$(location output)":
         subst_items.update({"{output}": out.path})
@@ -157,7 +134,7 @@ def _common_init(ctx, pkrfile, varfile, vars):
     substitutions = _subst(ctx, subst_items, True)
 
     # declare our environent, splice in output / $(locations)
-    env_items = _copy_dict(ctx.attr.env) if ctx.attr.env else {}
+    env_items = dict(ctx.attr.env) if ctx.attr.env else {}
 
     #env_items.update(PACKER_GLOBAL_SUBS)
     if env_items.get("{output}") == "$(location output)":
@@ -186,12 +163,15 @@ def _common_init(ctx, pkrfile, varfile, vars):
 
     env.update({"HOME": "."})
 
-    return pyscript_input, packerfile, var_file, env, out
+    return pyscript_input, packerfile, var_file, env, out, PackerCommonInfo(
+        substitutions = substitutions,
+        env_items = env_items,
+    )
 
 def _packer_qemu_impl(ctx):
     py = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"].py3_runtime.interpreter
 
-    pyscript_input, packerfile, var_file, env, out = _common_init(
+    pyscript_input, packerfile, var_file, env, out, info = _common_init(
         ctx,
         ctx.file.packerfile,
         ctx.file.var_file,
@@ -214,7 +194,7 @@ def _packer_qemu_impl(ctx):
         tools = [ctx.file._packer, ctx.executable._deployment_script, py] + ctx.attr._py.files.to_list(),
     )
 
-    return [DefaultInfo(files = depset([out]))]
+    return [DefaultInfo(files = depset([out])), info]
 
 packer_qemu = rule(
     implementation = _packer_qemu_impl,
@@ -274,7 +254,7 @@ packer_qemu = rule(
 def _packer_insert_file(ctx):
     py = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"].py3_runtime.interpreter
 
-    pyscript_input, packerfile, var_file, env, out = _common_init(
+    pyscript_input, packerfile, var_file, env, out, info = _common_init(
         ctx,
         ctx.file._packerfile,
         None,
@@ -372,7 +352,7 @@ packer_insert_file = rule(
 def _packer_run_scripts(ctx):
     py = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"].py3_runtime.interpreter
 
-    pyscript_input, packerfile, var_file, env, out = _common_init(
+    pyscript_input, packerfile, var_file, env, out, info = _common_init(
         ctx,
         ctx.file._packerfile,
         None,
