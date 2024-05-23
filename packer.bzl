@@ -75,6 +75,7 @@ def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
       "var_file": "{var_file}",
       "cli_vars": {cli_vars},
       "packer_path": "{packer_path}",
+      "iso_var_name": "{iso_var_name}",
       "sha256_var_name": "{sha256_var_name}",
       "iso_img_loc": "{iso_img_loc}",
       "env": {env}
@@ -87,6 +88,7 @@ def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
         cli_vars = cli_vars if cli_vars else "null",
         var_file = var_file.path if var_file else "null",
         packer_path = ctx.file._packer.path,
+        iso_var_name = ctx.attr.iso_var_name if ctx.attr.iso_var_name else "null",
         sha256_var_name = ctx.attr.sha256_var_name if ctx.attr.sha256_var_name else "null",
         iso_img_loc = path,
         env = str(env),
@@ -223,6 +225,9 @@ packer_qemu = rule(
         "input_img_subs_key": attr.string(
             default = "{iso}",
         ),
+        "iso_var_name": attr.string(
+            default = "iso_urls",
+        ),
         "sha256_var_name": attr.string(
             default = "iso_checksum",
         ),
@@ -315,6 +320,9 @@ packer_insert_file = rule(
         "input_img_subs_key": attr.string(
             default = "{iso}",
         ),
+        "iso_var_name": attr.string(
+            default = "iso_urls",
+        ),
         "sha256_var_name": attr.string(
             default = "iso_checksum",
         ),
@@ -406,6 +414,9 @@ packer_run_scripts = rule(
         ),
         "input_img_subs_key": attr.string(
             default = "{iso}",
+        ),
+        "iso_var_name": attr.string(
+            default = "iso_urls",
         ),
         "sha256_var_name": attr.string(
             default = "iso_checksum",

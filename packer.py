@@ -76,6 +76,7 @@ class Config(NamedTuple):
     var_file: str
     cli_vars: dict[str, str]
     packer_path: str
+    iso_var_name: str
     sha256_var_name: str
     iso_img_loc: str
     env: dict[str, str]
@@ -176,12 +177,12 @@ class Config(NamedTuple):
                         "-force" if self.overwrite else None,
                         "-var-file=" + self.var_file if self.var_file else None,
                         (
-                            "-var "
-                            + self.sha256_var_name
-                            + "="
-                            + sha256(self.iso_img_loc)
-                            if self.sha256_var_name
-                            else None
+                            "-var " + self.iso_var_name + "=" + self.iso_img_loc
+                            if self.iso_var_name else None
+                        ),
+                        (
+                            "-var " + self.sha256_var_name + "=" + sha256(self.iso_img_loc)
+                            if self.sha256_var_name else None
                         ),
                     ]
                     + vars
@@ -195,12 +196,12 @@ class Config(NamedTuple):
                         "build",
                         "-force" if self.overwrite else None,
                         (
-                            "-var "
-                            + self.sha256_var_name
-                            + "="
-                            + sha256(self.iso_img_loc)
-                            if self.sha256_var_name
-                            else None
+                            "-var " + self.iso_var_name + "=" + self.iso_img_loc
+                            if self.iso_var_name else None
+                        ),
+                        (
+                            "-var " + self.sha256_var_name + "=" + sha256(self.iso_img_loc)
+                            if self.sha256_var_name else None
                         ),
                     ]
                     + vars
@@ -214,12 +215,12 @@ class Config(NamedTuple):
                         "build",
                         "-force " if self.overwrite else None,
                         (
-                            "-var "
-                            + self.sha256_var_name
-                            + "="
-                            + sha256(self.iso_img_loc)
-                            if self.sha256_var_name
-                            else None
+                            "-var " + self.iso_var_name + "=" + self.iso_img_loc
+                            if self.iso_var_name else None
+                        ),
+                        (
+                            "-var " + self.sha256_var_name + "=" + sha256(self.iso_img_loc)
+                            if self.sha256_var_name else None
                         ),
                     ]
                     + vars
