@@ -1,5 +1,5 @@
 load("@com_github_rules_packer_config//:config.bzl", "PACKER_DEBUG")
-load("//:packer.bzl", "packer_qemu")
+load("@com_github_rules_packer//:packer.bzl", "packer_qemu")
 
 exports_files([
     "ubuntu2.json",
