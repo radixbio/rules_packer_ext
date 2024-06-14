@@ -23,14 +23,14 @@
         "{{ user `preseed` }}"
       ],
       "headless": "{{ user `headless` }}",
+      "display": "{{ user `display` }}",
+      "vga": "{{ user `vga` }}",
       "http_directory": "{{ user `http_dir` }}",
       "iso_checksum": "{{ user `iso_checksum_type` }}:{{ user `iso_checksum` }}",
       "iso_urls": ["{{ user `iso_url` }}"],
       "output_directory": "{{ user `output` }}",
       "qemuargs": [
         ["-m", "{{ user `memory` }}"],
-        ["-display", "{{ user `display` }}"],
-        ["-vga", "{{ user `vga` }}"],
         ["-machine", "accel={{ user `accel` }}"],
         ["-cpu", "{{ user `cpu` }}"],
         ["-smp", "cpus={{ user `cpus`}}"]

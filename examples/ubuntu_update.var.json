@@ -3,6 +3,7 @@
     "iso": "{iso}",
     "output": "{output}",
     "display": "none",
+    "vga": "none",
     "vm_name": "{name}",
     "iso_checksum_type": "sha256"
 }

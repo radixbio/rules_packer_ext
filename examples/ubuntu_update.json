@@ -5,6 +5,8 @@
       "iso_url": "{{ user `iso` }}",
       "iso_checksum": "{{ user `iso_checksum_type` }}:{{ user `iso_checksum` }}",
       "headless": "{{ user `headless` }}",
+      "display": "{{ user `display` }}",
+      "vga": "{{ user `vga` }}",
       "type": "qemu",
       "vm_name": "{{ user `vm_name` }}",
       "ssh_username": "vagrant",
@@ -12,8 +14,6 @@
       "output_directory": "{{ user `output` }}",
       "qemuargs": [
         ["-m", "{{ user `memory` }}"],
-        ["-display", "{{ user `display` }}"],
-        ["-vga", "qxl"],
         ["-machine", "accel=kvm"],
         ["-cpu", "host"],
         ["-smp", "cpus={{ user `cpus`}}"]
@@ -31,6 +31,7 @@
     "memory": "512",
     "cpus": "1",
     "display": "gtk",
+    "vga": "qxl",
     "headless": "true",
     "iso_checksum": "f294fe0d4cd1c28233228363623481079b87e6ffb0504f3e4d7c1f494c77e618",
     "iso_checksum_type": "sha256",

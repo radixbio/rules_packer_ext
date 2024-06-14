@@ -11,6 +11,9 @@
       "vm_name": "{{ user `vm_name` }}",
       "disk_image": "true",
       "skip_resize_disk": "true",
+      "display": "{{ user `display` }}",
+      "vga": "{{ user `vga` }}",
+      "headless": "{{ user `headless` }}",
       "qemuargs": [
         ["-m", "{{ user `memory` }}"],
         ["-machine", "accel={{ user `accel` }}"],
@@ -24,6 +27,9 @@
   "variables": {
     "iso_url": "{iso}",
     "iso_checksum": "{iso_checksum}",
+    "vga": "{vga}",
+    "display": "{display}",
+    "headless": "{headless}",
     "output": "{output}",
     "ssh_fullname": "{ssh_fullname}",
     "ssh_password": "{ssh_password}",

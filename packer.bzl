@@ -226,7 +226,7 @@ packer_qemu = rule(
             default = "{iso}",
         ),
         "iso_var_name": attr.string(
-            default = "iso_urls",
+            default = "iso_url",
         ),
         "sha256_var_name": attr.string(
             default = "iso_checksum",
