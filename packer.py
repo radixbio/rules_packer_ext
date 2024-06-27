@@ -69,7 +69,6 @@ class Config(NamedTuple):
        overwrite."""
 
     name: str
-    architecture: str
     overwrite: bool
     packerfile: str
     out_dir: str
@@ -81,6 +80,7 @@ class Config(NamedTuple):
     iso_img_loc: str
     env: dict[str, str]
     variant: CLI_variant
+    qemu: str
 
     @staticmethod
     def from_json(variant: CLI_variant) -> Callable[[Dict[str, Any]], "Config"]:
@@ -92,8 +92,7 @@ class Config(NamedTuple):
 
         def loader(args):
             try:
-                args.update({"variant": variant})
-                return Config(**args)
+                return Config(**{**args, **{"variant": variant}})
             except TypeError as e:
                 return args
 
@@ -249,25 +248,6 @@ def deal_with_existing_out_dir(config: Config):
                 raise NotImplementedError("not implemented for non-overwrite")
                 pass  # some clever sha thing? or just never run packer
 
-
-def find_system_qemu(tgt_arch):
-    """Which's to try to find qemu."""
-    qemu_search = "qemu-system-" + tgt_arch
-    qemu = shutil.which(qemu_search)
-    if qemu is None:
-        system = platform.system().lower()
-        print(system)
-        if system == "linux":
-            qemu = shutil.which(qemu_search, path="/bin:/usr/bin:/usr/local/bin")
-        elif system == "macos" or system == "darwin":
-            qemu = shutil.which(
-                qemu_search, path="/bin:/usr/bin:/usr/local/bin:/opt/homebrew/bin"
-            )
-    if qemu is None:
-        raise RuntimeError("cannot find " + qemu_search)
-    return qemu
-
-
 def invoke_packer(config, qemu_path, additional_plugins=None):
     log.debug("calling: " + str(" ".join(config.cli())))
     path = os.environ.get("PATH")
@@ -338,7 +318,7 @@ def cli():
 
 def build(args):
     config = Config.from_path(args.config_file, Build())
-    qemu_name = find_system_qemu(config.architecture)
+    qemu_name = config.qemu
     qemu_path = os.path.dirname(qemu_name)
     deal_with_existing_out_dir(config)
     packer = invoke_packer(config, qemu_path, ["github.com/hashicorp/qemu"])
@@ -347,7 +327,7 @@ def build(args):
 
 def insert_file(args):
     config = Config.from_path(args.config_file, InsertFile())
-    qemu_name = find_system_qemu(config.architecture)
+    qemu_name = config.qemu
     qemu_path = os.path.dirname(qemu_name)
     deal_with_existing_out_dir(config)
     config = config.splice_files_to_transfer(args.files)
@@ -358,7 +338,7 @@ def insert_file(args):
 
 def run_script(args):
     config = Config.from_path(args.config_file, RunScripts())
-    qemu_name = find_system_qemu(config.architecture)
+    qemu_name = config.qemu
     qemu_path = os.path.dirname(qemu_name)
     deal_with_existing_out_dir(config)
     config = config.splice_scripts_to_run(args.scripts)

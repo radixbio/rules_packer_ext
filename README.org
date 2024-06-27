@@ -2,25 +2,54 @@
 
 * Installation
 ** Rules
+*** Installation
+#+begin_src  python
+# TODO http_archive line
+load("@com_github_rules_packer//:packer_config.bzl", "packer_configure")
+# NOTE your packer_configure targets go here
+load("@com_github_rules_packer//:packer_dependencies.bzl", "packer_dependencies")
+
+packer_dependencies()
+
+load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies")
+
+aspect_bazel_lib_dependencies()
+#+end_src
 
 ** Configuration
-*** Linux headless
+*** Linux (GTK window)
 #+begin_src python
 packer_configure(
     packer_version = "1.8.6",
     qemu_version = "wip", # TODO: is it possible to load our own qemu like this?
     global_substitutions = {
-        '{headless}': "true",
+        '{headless}': "false",
         '{http_dir}': ".",
         '{accel}': "kvm",
         '{vga}': "qxl",
-        '{display}': "none",
+        '{display}': "gtk",
         '{cpu}': "Cascadelake-Server-v4" # NOTE: change this to whatever your virtualization target is
     },
     debug = True
 )
 #+end_src
-*** MacOS
+*** Linux headless
+#+begin_src python ff
+packer_configure(
+    packer_version = "1.8.6",
+    qemu_version = "wip",
+    global_substitutions = {
+        '{headless}': "true",
+        '{http_dir}': ".",
+        '{accel}': "kvm",
+        '{vga}': "none",
+        '{display}': "none",
+        '{cpu}': "Cascadelake-Server-v4" # NOTE: change this to whatever your virtualization target is
+    }
+)
+
+#+end_src
+*** MacOS (cocoa window)
 #+begin_src python
 packer_configure(
     packer_version = "1.8.6",
@@ -38,7 +67,7 @@ packer_configure(
 #+end_src
 ** Enabling non-headless (GUI) windows on the host system
 *** Linux
-As of now, this doesn't seem to work
+You should set =headless= to =false=, and supply a VGA adapter like =qxl= in =vga= and set the =display= to be =gtk=
 *** MacOS
 using =cocoa= and =cirrus= for the =qemuargs='s =display= and =vga= arguments appears to let this work on MacOS
 

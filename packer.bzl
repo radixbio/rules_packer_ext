@@ -1,6 +1,7 @@
 load("@aspect_bazel_lib//lib:expand_make_vars.bzl", "expand_locations")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@com_github_rules_packer_config//:config.bzl", "PACKER_ARCH", "PACKER_BIN_NAME", "PACKER_DEBUG", "PACKER_DISPLAY", "PACKER_GLOBAL_SUBS", "PACKER_OS", "PACKER_SHAS", "PACKER_VERSION")
+load("@com_github_rules_qemu//:utils.bzl", "resolve_qemu_path")
 
 def _get_iso_loc_from_tgt(tgt):
     # this is passed a bazel target for input_img
@@ -68,7 +69,6 @@ def _write_var_file(ctx, varfile, substitutions, suffix = "_"):
 def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
     pyscript_content = """{{
       "name": "{name}",
-      "architecture": "{architecture}",
       "overwrite": {overwrite},
       "packerfile": "{packerfile}",
       "out_dir": "{out_dir}",
@@ -78,10 +78,10 @@ def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
       "iso_var_name": "{iso_var_name}",
       "sha256_var_name": "{sha256_var_name}",
       "iso_img_loc": "{iso_img_loc}",
-      "env": {env}
+      "env": {env},
+      "qemu": "{qemu}"
     }}""".format(
         name = str(ctx.attr.name),
-        architecture = str(ctx.attr.architecture),
         overwrite = str(ctx.attr.overwrite).lower(),  # json boolean
         packerfile = packerfile.path,
         out_dir = out.path,
@@ -92,9 +92,12 @@ def _write_config_json(ctx, path, cli_vars, packerfile, var_file, env, out):
         sha256_var_name = ctx.attr.sha256_var_name if ctx.attr.sha256_var_name else "null",
         iso_img_loc = path,
         env = str(env),
+        qemu = resolve_qemu_path(
+            ctx.toolchains["@com_github_rules_qemu//toolchain:toolchain_type"].info,
+            ctx.attr.architecture,
+        ),
     )
     pyscript_input = ctx.actions.declare_file("run-" + ctx.attr.name + ".input.json")
-
     ctx.actions.write(
         output = pyscript_input,
         content = pyscript_content,
@@ -200,10 +203,13 @@ def _packer_qemu_impl(ctx):
 
 packer_qemu = rule(
     implementation = _packer_qemu_impl,
-    toolchains = ["@bazel_tools//tools/python:toolchain_type"],
+    toolchains = [
+        "@bazel_tools//tools/python:toolchain_type",
+        "@com_github_rules_qemu//toolchain:toolchain_type",
+    ],
     attrs = {
-        "architecture": attr.string(
-            default = "x86_64",
+        "architecture": attr.label(
+            default = "@platforms//cpu:x86_64",
         ),
         "overwrite": attr.bool(
             default = False,
@@ -302,10 +308,13 @@ def _packer_insert_file(ctx):
 
 packer_insert_file = rule(
     implementation = _packer_insert_file,
-    toolchains = ["@bazel_tools//tools/python:toolchain_type"],
+    toolchains = [
+        "@bazel_tools//tools/python:toolchain_type",
+        "@com_github_rules_qemu//toolchain:toolchain_type",
+    ],
     attrs = {
-        "architecture": attr.string(
-            default = "x86_64",
+        "architecture": attr.label(
+            default = "@platforms//cpu:x86_64",
         ),
         "overwrite": attr.bool(
             default = False,
@@ -397,10 +406,13 @@ def _packer_run_scripts(ctx):
 
 packer_run_scripts = rule(
     implementation = _packer_run_scripts,
-    toolchains = ["@bazel_tools//tools/python:toolchain_type"],
+    toolchains = [
+        "@bazel_tools//tools/python:toolchain_type",
+        "@com_github_rules_qemu//toolchain:toolchain_type",
+    ],
     attrs = {
-        "architecture": attr.string(
-            default = "x86_64",
+        "architecture": attr.label(
+            default = "@platforms//cpu:x86_64",
         ),
         "overwrite": attr.bool(
             default = False,
