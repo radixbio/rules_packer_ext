@@ -1,5 +1,5 @@
-load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@com_github_rules_packer//:packer.bzl", "PackerCommonInfo", "packer_qemu")
 
 def _packer_qemu_simple_test_impl(ctx):
