@@ -12,6 +12,7 @@
       "ssh_username": "vagrant",
       "ssh_password": "vagrant",
       "output_directory": "{{ user `output` }}",
+      "accelerator": "{{ user `accelerator` }}",
       "qemuargs": [
         ["-m", "{{ user `memory` }}"],
         ["-machine", "accel=kvm"],
@@ -27,6 +28,7 @@
     }
   ],
   "variables": {
+    "accelerator": "tcg",
     "iso": "file://{{ env `PWD` }}/ubuntu/ubuntu1804",
     "memory": "512",
     "cpus": "1",

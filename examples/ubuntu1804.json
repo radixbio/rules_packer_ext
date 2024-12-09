@@ -1,8 +1,8 @@
 {
   "_comment": "Build with `packer build -var-file=ubuntu1804.json ubuntu.json`",
-  "preseed" : "{preseed}",
+  "preseed": "{preseed}",
   "boot_command_prefix": "<esc><esc><enter><wait>",
-  "headless" : "{headless}",
+  "headless": "{headless}",
   "iso_url": "{iso}",
   "scripts": "{scripts}",
   "output": "{output}",
@@ -10,5 +10,5 @@
   "display": "{display}",
   "vga": "{vga}",
   "cpu": "{cpu}",
-  "accel": "{accel}"
+  "accelerator": "{accelerator}"
 }

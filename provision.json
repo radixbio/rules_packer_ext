@@ -14,16 +14,15 @@
       "display": "{{ user `display` }}",
       "vga": "{{ user `vga` }}",
       "headless": "{{ user `headless` }}",
+      "accelerator": "{{ user `accelerator` }}",
       "qemuargs": [
         ["-m", "{{ user `memory` }}"],
-        ["-machine", "accel={{ user `accel` }}"],
+        ["-machine", "accel={{ user `accelerator` }}"],
         ["-cpu", "{{ user `cpu` }}"]
       ]
     }
   ],
-  "provisioners": [
-
-  ],
+  "provisioners": [],
   "variables": {
     "iso_url": "{iso}",
     "iso_checksum": "{iso_checksum}",
@@ -35,7 +34,7 @@
     "ssh_password": "{ssh_password}",
     "ssh_username": "{ssh_username}",
     "vm_name": "{name}",
-    "accel": "{accel}",
+    "accelerator": "{accelerator}",
     "memory": "{memory}",
     "cpu": "{cpu}"
   }

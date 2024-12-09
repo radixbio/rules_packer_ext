@@ -25,7 +25,7 @@ packer_configure(
     global_substitutions = {
         '{headless}': "false",
         '{http_dir}': ".",
-        '{accel}': "kvm",
+        '{accelerator}': "kvm",
         '{vga}': "qxl",
         '{display}': "gtk",
         '{cpu}': "Cascadelake-Server-v4" # NOTE: change this to whatever your virtualization target is
@@ -41,7 +41,7 @@ packer_configure(
     global_substitutions = {
         '{headless}': "true",
         '{http_dir}': ".",
-        '{accel}': "kvm",
+        '{accelerator}': "kvm",
         '{vga}': "none",
         '{display}': "none",
         '{cpu}': "Cascadelake-Server-v4" # NOTE: change this to whatever your virtualization target is
@@ -56,7 +56,7 @@ packer_configure(
     qemu_version = "wip", # TODO: is it possible to load our own qemu like this?
     global_substitutions = {
         '{http_dir}': ".",
-        '{accel}': "tcg", # TODO: confirm hvm works here
+        '{accelerator}': "tcg", # TODO: confirm hvm works here
         '{vga}': "cirrus",
         '{display}': "cocoa",
         '{cpu}': "Cascadelake-Server-v4"
@@ -84,7 +84,7 @@ packer_configure(
     global_substitutions = {
         '"{$foo}"': "bar",
         '{http_dir}': ".",
-        '{accel}': "kvm",
+        '{accelerator}': "kvm",
         '{vga}': "qxl",
         '{display}': "gtk",
         '{cpu}': "Cascadelake-Server-v4"

@@ -5,5 +5,6 @@
     "display": "none",
     "vga": "none",
     "vm_name": "{name}",
-    "iso_checksum_type": "sha256"
+    "iso_checksum_type": "sha256",
+    "accelerator": "{accelerator}"
 }
